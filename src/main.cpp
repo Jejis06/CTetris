@@ -213,7 +213,7 @@ class Game{
 
 
 		/* constructor/destructor */
-		Game(int width=10, int height=25, float inputDelay=20, Tile deafultTile=clear):
+		Game(int width=10, int height=24, float inputDelay=20, Tile deafultTile=clear):
 			w(width), h(height), inputDelay(inputDelay), deafultTile(deafultTile)
 		{
 			board = new int*[height];
