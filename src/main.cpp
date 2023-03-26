@@ -213,19 +213,24 @@ class Game{
 
 
 		/* constructor/destructor */
-		Game(int width=10, int height=24, float inputDelay=20, Tile deafultTile=clear):
-			w(width), h(height), inputDelay(inputDelay), deafultTile(deafultTile)
+		Game(int width=10, int height=24, float inputDelay=20, Tile deafultTile=clear, int borderWidth=2, int borderHeight=2):
+			w(width), h(height), inputDelay(inputDelay), deafultTile(deafultTile), borderWidth(borderWidth), borderHeight(borderHeight)
 		{
-			board = new int*[height];
-			for(size_t i=0; i<height; i++)
-				board[i] = new int[width];
 
-			videoBoard = new string*[height * deafultTile.h];
-			for(size_t i=0; i<height * deafultTile.h; i++)
-				videoBoard[i] = new string[width * deafultTile.w];
+			BACKGROUND = BACKGROUND_C + BACKGROUND + END;
+			BORDER_H = BORDER_C + BORDER_H + END;
+			BORDER_V = BORDER_C + BORDER_H + END;
 
-			fill<string>(videoBoard,BACKGROUND,width * deafultTile.w, height * deafultTile.h);
-			fill<int>(board,0,width,height);
+			board = new int*[h];
+			for(size_t i=0; i<h; i++)
+				board[i] = new int[w];
+
+			videoBoard = new string*[h * deafultTile.h];
+			for(size_t i=0; i<h * deafultTile.h; i++)
+				videoBoard[i] = new string[w * deafultTile.w];
+
+			fill<string>(videoBoard,BACKGROUND,w * deafultTile.w, h * deafultTile.h);
+			fill<int>(board,0,w,h);
 
 			frameDelay = speeds[level];
 
@@ -247,7 +252,7 @@ class Game{
 
 		/* helper functions */
 
-		template<typename T> void fill(T** arr, T val, int W, int H);
+		template<typename T> void fill(T** arr, T val, int W, int H, int startX=0, int startY=0);
 		void SetTile(int x, int y, bool remove);
 
 		/* game functions */	
@@ -258,6 +263,8 @@ class Game{
 		void processInput(char in);
 		void nextFrame();
 		void drawFrame();
+		void drawBorder(bool Horizontal_Vertical);
+		void drawStats();
 
 		void randomBlock();
 
@@ -282,6 +289,7 @@ class Game{
 
 		/* sys */
 		int w,h;
+		int borderWidth, borderHeight;
 		bool game_loop = true;
 		float inputDelay;
 		bool change = false;
@@ -302,17 +310,24 @@ class Game{
 
 		string BACKGROUND = ".";
 
+		string BORDER_V = "|";
+		string BORDER_H = "-";
+
 		// \033[XXXm
 		string CLEAR = 		"\033c";
 		string END = 		"\e[0m";
 
-		string RED = 		"\e[41m";
-		string GREEN = 		"\e[42m";
-		string YELLOW = 	"\e[43m";
-		string CYAN = 		"\e[46m";
-		string MAGENTA = 	"\e[45m";
-		string WHITE = 		"\e[47m";
-		string BLUE=		"\e[44m";
+		string RED = 		"\e[97;41m";
+		string GREEN = 		"\e[97;42m";
+		string YELLOW = 	"\e[97;43m";
+		string CYAN = 		"\e[97;46m";
+		string MAGENTA = 	"\e[97;45m";
+		string WHITE = 		"\e[97;47m";
+		string BLUE =		"\e[97;44m";
+
+		string BACKGROUND_C = 	"\e[40m";
+		string BORDER_C = 	"\e[30;100m";
+		string INFORMATION_C =	"\e[31;40m";
 
 
 		/* graphics */
@@ -349,19 +364,29 @@ class Game{
 };
 
 template<typename T>
-void Game::fill(T** arr, T val, int W, int H){
-	for(int x=0; x<W; x++)
-		for(int y=0; y<H; y++)
+void Game::fill(T** arr, T val, int W, int H, int startX, int startY){
+	for(int x=startX; x<W; x++)
+		for(int y=startY; y<H; y++)
 			arr[y][x] = val;
 }
 
 void Game::SetTile(int x, int y, bool remove = false){
-	for(int x1=x * deafultTile.w; x1 <= x * deafultTile.w + deafultTile.w-1; x1++){
-		for(int y1=y * deafultTile.h; y1 <= y * deafultTile.h + deafultTile.h-1; y1++){
-			if (remove) videoBoard[y1][x1] = BACKGROUND;
-			else videoBoard[y1][x1] = colorTable[board[y][x] - 1] + deafultTile.At(x1-x*deafultTile.w,y1-y*deafultTile.h) + END;
 
-		}
+	int startX = x * deafultTile.w,
+	    startY = y * deafultTile.h;
+
+	int endX = startX + deafultTile.w-1,
+	    endY = startY + deafultTile.h-1;
+
+	if(remove){
+		fill<string>(videoBoard,BACKGROUND,endX+1,endY+1,startX,startY);
+		return;
+	}
+
+	for(int y1=startY; y1 <= endY; y1++){
+		for(int x1=startX; x1 <= endX; x1++)
+			videoBoard[y1][x1] =colorTable[board[y][x] - 1] +  deafultTile.At(x1-x*deafultTile.w,y1-y*deafultTile.h) + END; 
+
 	}
 }
 
@@ -459,11 +484,11 @@ void Game::processInput(char in){
 	}
 
 	else if(code == 11){
-		frameDelay -= 1;
+		points += 100000;
 	}
 
 	else if(code == 12){ 
-		frameDelay += 1;
+		points -= 100000;
 	}
 	/* update frame */
 	for(auto& element : currentBlock.points){
@@ -497,28 +522,59 @@ void Game::drawFrame(){
 		randomBlock();
 		change = false;
 	}
-	cout << "LEVEL : " << level << " FRAMES : " << frameDelay << " POINTS : " << points << " NEXT : " << nextBlockIND<<  '\n';
-
 
 	for(int y=0; y<h * deafultTile.h; y++){
+
+		if(y == 0) drawStats();
+
+		drawBorder(1);
 		for(int x=0; x<w * deafultTile.w; x++){
 			cout << videoBoard[y][x];
 		}
+		drawBorder(1);
+		cout << '\n';
+
+		if(y == h * deafultTile.h - 1) drawBorder(0);
+	}
+}
+
+void Game::drawBorder(bool Horizontal_Vertical){/* 
+		  Horizontal	- false
+		  Vertical	- true
+	 */
+
+	if(Horizontal_Vertical){
+		for(int i=0; i<borderWidth; i++)
+			cout << BORDER_V;
+		return;
+	}
+
+	for(int i=0; i< borderHeight; i++){
+		for(int j=0; j<w * deafultTile.w + 2 * borderWidth ; j++)
+			cout << BORDER_H;
 		cout << '\n';
 	}
-	/*
-	for(int y=0; y<h; y++){
-		for(int x=0; x<w; x++){
-			if(board[y][x] >= 1) cout << board[y][x];
-			else cout << ' ';
-		}
-		cout << '\n';
-	}
-	*/
 
 
 }
 
+void Game::drawStats(){
+	
+	string information = INFORMATION_C + " LEVEL : " + to_string(level) + " " + END +
+		BORDER_C + " | " + END +
+		INFORMATION_C + " POINTS : " + to_string(points) + " " + END;
+
+	int len = information.size() - (INFORMATION_C + INFORMATION_C + END + END + END + BORDER_C).size();
+
+	int endI = abs((2 * borderWidth + w * deafultTile.w)/2 - len/2);
+	int correction = (2 * endI + len) - (2 * borderWidth + w * deafultTile.w);
+
+	for(int i=0; i<endI-correction; i++) cout << BORDER_V;
+		cout << information;
+	for(int i=0; i<endI; i++) cout << BORDER_V;
+		cout << '\n';
+	
+}
 
 
 
