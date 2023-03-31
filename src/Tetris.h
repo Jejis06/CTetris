@@ -131,14 +131,14 @@ class Game{
 
 		std::string RED = 		"\e[97;41m";
 		std::string GREEN = 		"\e[97;42m";
-		std::string YELLOW = 	"\e[97;43m";
+		std::string YELLOW = 		"\e[97;43m";
 		std::string CYAN = 		"\e[97;46m";
-		std::string MAGENTA = 	"\e[97;45m";
+		std::string MAGENTA = 		"\e[97;45m";
 		std::string WHITE = 		"\e[97;47m";
 		std::string BLUE =		"\e[97;44m";
 
 		std::string BACKGROUND_C = 	"\e[40m";
-		std::string BORDER_C = 	"\e[30;100m";
+		std::string BORDER_C = 		"\e[30;100m";
 		std::string INFORMATION_C =	"\e[31;40m";
 
 

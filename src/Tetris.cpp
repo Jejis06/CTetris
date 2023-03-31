@@ -312,8 +312,9 @@ void Game::levelIncrease(){
 
 
 
-void Game::gameOver(){
-	std::cout << CLEAR << "KONIEC TYEGFO\n";
+void Game::gameOver() {
+	std::cout << CLEAR << "GAME OVER\n";
+	std::cout << "SCORE : " << points;
 }
 
 
