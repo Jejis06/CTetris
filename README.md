@@ -206,15 +206,6 @@ g++ src/main.cpp -std=c++20 -o build/out
 
 This project is open source. Please check with the repository owner for specific licensing terms.
 
-## 🚧 Future Enhancements
-
-- [ ] High score persistence
-- [ ] Multiplayer support
-- [ ] Additional tile styles
-- [ ] Sound effects
-- [ ] Improved AI opponent
-- [ ] Mobile terminal support
-
 ---
 
 **Enjoy playing CTetris++!** 🎮
